@@ -1,0 +1,23 @@
+---
+- name: Deploy FastAPI with Docker Compose
+  hosts: docker_swarm
+  become: yes
+  vars:
+    docker_compose_dir: "{{ playbook_dir }}/../../docker"
+  tasks:
+    - name: Ensure .env file exists
+      copy:
+        content: |
+          DOCKER_IMAGE={{ lookup('env', 'TF_VAR_docker_image') }}
+          DB_PASSWORD={{ lookup('env', 'DB_PASSWORD') }}
+        dest: "{{ docker_compose_dir }}/.env"
+        mode: '0600'
+      delegate_to: localhost
+
+    - name: Deploy Docker Compose stack
+      community.docker.docker_compose:
+        project_src: "{{ docker_compose_dir }}"
+        files:
+          - docker-compose.yml
+        state: present
+        remove_orphans: yes

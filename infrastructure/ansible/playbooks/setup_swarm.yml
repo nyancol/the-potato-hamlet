@@ -1,0 +1,51 @@
+---
+- name: Setup Docker Swarm
+  hosts: all
+  vars_files:
+    - tf_outputs.yml
+  become: yes
+  vars:
+    docker_image: "{{ lookup('env', 'TF_VAR_docker_image') }}"
+
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+- name: Initialize Swarm cluster
+  hosts: manager
+  become: yes
+  tasks:
+    - name: Initialize Docker Swarm
+      docker_swarm:
+        state: present
+      register: swarm_info
+
+    - name: Get join token
+      set_fact:
+        join_token: "{{ swarm_info.swarm_facts.JoinTokens.Worker }}"
+
+- name: Join workers to Swarm
+  hosts: workers
+  become: yes
+  tasks:
+    - name: Join Swarm cluster
+      docker_swarm:
+        state: join
+        advertise_addr: "{{ ansible_default_ipv4.address }}"
+        join_token: "{{ hostvars['manager']['join_token'] }}"
+        remote_addrs: [ "{{ hostvars['manager']['ansible_default_ipv4']['address'] }}:2377" ]
