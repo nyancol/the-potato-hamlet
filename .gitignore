@@ -167,3 +167,4 @@ cython_debug/
 # Terraform
 secrets.tfvars
 .terraform
+.terraform.lock.hcl
