@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
-
+import os
 
 class Base(DeclarativeBase):
     pass
@@ -10,7 +10,10 @@ class Base(DeclarativeBase):
 
 # engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
-POSTGRES_URL = "postgresql+psycopg://postgres:example@localhost/postgres"
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+
+POSTGRES_URL = f"postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@db/postgres"
 
 engine = create_engine(POSTGRES_URL)
 
