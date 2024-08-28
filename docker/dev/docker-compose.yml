@@ -1,0 +1,24 @@
+version: '3'
+services:
+  web:
+    image: potato_hamlet/backend:latest
+    build:
+      context: ../../
+      dockerfile: ./docker/dev/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../..:/app
+    environment:
+      - DEBUG=1
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=example
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
