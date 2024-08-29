@@ -5,7 +5,7 @@ output "instance_ids" {
 
 output "vpc_id" {
   description = "ID of the created VPC"
-  value       = aws_vpc.main.id
+  value       = aws_vpc.swarm_vpc.id
 }
 
 output "instance_public_ip" {
