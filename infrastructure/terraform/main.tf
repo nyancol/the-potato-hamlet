@@ -56,14 +56,14 @@ resource "aws_security_group" "swarm_sg" {
     from_port   = 8000
     to_port     = 8000
     protocol    = "tcp"
-    self        = true
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
-    self        = true
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -89,5 +89,5 @@ resource "local_file" "ansible_vars" {
   content = yamlencode({
     instance_public_ip = aws_instance.docker_swarm[0].public_ip
   })
-  filename = "${path.module}/../ansible/tf_outputs.yml"
+  filename = "${path.module}/../ansible/playbooks/tf_outputs.yml"
 }
