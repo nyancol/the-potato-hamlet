@@ -3,21 +3,50 @@
   hosts: docker_swarm
   become: yes
   vars:
-    docker_compose_dir: "{{ playbook_dir }}/../../docker"
+    docker_compose_dir: "{{ playbook_dir }}/../../../docker/prod/"
   tasks:
-    - name: Ensure .env file exists
-      copy:
-        content: |
-          DOCKER_IMAGE={{ lookup('env', 'TF_VAR_docker_image') }}
-          DB_PASSWORD={{ lookup('env', 'DB_PASSWORD') }}
-        dest: "{{ docker_compose_dir }}/.env"
-        mode: '0600'
-      delegate_to: localhost
-
-    - name: Deploy Docker Compose stack
-      community.docker.docker_compose:
-        project_src: "{{ docker_compose_dir }}"
-        files:
-          - docker-compose.yml
+    - name: Ensure Python and pip are installed
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-virtualenv
         state: present
-        remove_orphans: yes
+
+    - name: Create project directory
+      file:
+        path: /opt/docker/the_potato_hamlet
+        state: directory
+        mode: '0755'
+
+    # - name: Create a Python virtual environment
+    #   command: python3 -m virtualenv /opt/docker/the_potato_hamlet/venv
+    #   args:
+    #     creates: /opt/docker/the_potato_hamlet/venv
+
+    - name: Install jsondiff and pyyaml
+      ansible.builtin.pip:
+        name:
+          - jsondiff
+          - pyyaml
+        virtualenv: /opt/docker/the_potato_hamlet/virtualenv
+
+    - name: Copy Docker Compose file to the target host
+      copy:
+        src: "{{ docker_compose_dir }}/docker-compose.yml"
+        dest: /opt/docker/the_potato_hamlet/docker-compose.yml
+
+    - name: Copy .env file to the target host
+      copy:
+        src: "{{ docker_compose_dir }}/.env"
+        dest: /opt/docker/the_potato_hamlet/.env
+
+- hosts: docker_swarm
+  vars:
+    ansible_python_interpreter: "/opt/docker/the_potato_hamlet/virtualenv/bin/python"
+  tasks:
+    - name: Deploy Docker stack
+      docker_stack:
+        name: potato_hamlet
+        state: present
+        compose: /opt/docker/the_potato_hamlet/docker-compose.yml
