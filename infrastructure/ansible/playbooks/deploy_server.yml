@@ -3,7 +3,7 @@
   hosts: docker_swarm
   become: yes
   vars:
-    docker_compose_dir: "{{ playbook_dir }}/../../../docker/prod/"
+    docker_compose_dir: "{{ playbook_dir }}/../../../docker/staging/"
   tasks:
     - name: Ensure Python and pip are installed
       apt:

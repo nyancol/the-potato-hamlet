@@ -1,0 +1,27 @@
+version: '3'
+services:
+  web:
+    env_file: ".env"
+    image: nyancoli/the-potato-hamlet:staging
+    build:
+      context: ../../
+      dockerfile: ./docker/prod/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DEBUG: ${DEBUG}
+  db:
+    image: postgres
+    env_file: ".env"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
