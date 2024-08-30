@@ -6,3 +6,4 @@ all:
           ansible_host: "{{ lookup('file', 'tf_outputs.yml') | from_yaml | json_query('instance_public_ip') }}"
           ansible_user: ubuntu
           ansible_ssh_private_key_file: ~/.ssh/terraform_ec2_key
+          ansible_ssh_common_args: "-o StrictHostKeyChecking=no"

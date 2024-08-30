@@ -11,6 +11,7 @@
           - python3
           - python3-pip
           - python3-virtualenv
+          - docker-compose
         state: present
 
     - name: Create project directory
@@ -18,11 +19,6 @@
         path: /opt/docker/the_potato_hamlet
         state: directory
         mode: '0755'
-
-    # - name: Create a Python virtual environment
-    #   command: python3 -m virtualenv /opt/docker/the_potato_hamlet/venv
-    #   args:
-    #     creates: /opt/docker/the_potato_hamlet/venv
 
     - name: Install jsondiff and pyyaml
       ansible.builtin.pip:
@@ -41,6 +37,12 @@
         src: "{{ docker_compose_dir }}/.env"
         dest: /opt/docker/the_potato_hamlet/.env
 
+    - name: Preprocess docker-compose.yml using .env
+      shell: docker-compose -f "/opt/docker/the_potato_hamlet/docker-compose.yml" config > "/opt/docker/the_potato_hamlet/docker-compose-full.yml"
+      args:
+        executable: /bin/bash
+      become: true
+
 - hosts: docker_swarm
   vars:
     ansible_python_interpreter: "/opt/docker/the_potato_hamlet/virtualenv/bin/python"
@@ -49,4 +51,4 @@
       docker_stack:
         name: potato_hamlet
         state: present
-        compose: /opt/docker/the_potato_hamlet/docker-compose.yml
+        compose: /opt/docker/the_potato_hamlet/docker-compose-full.yml
