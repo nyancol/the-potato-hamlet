@@ -4,6 +4,7 @@ from potato_pyserver.routers import users, hamlets, households, world_items
 
 import logging
 from fastapi import FastAPI, status, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -11,6 +12,8 @@ from fastapi.responses import JSONResponse
 
 reset_tables(engine)
 app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
+                   allow_methods=["*"], allow_headers=["*"])
 app.include_router(users.router)
 app.include_router(hamlets.router)
 app.include_router(households.router)
