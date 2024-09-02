@@ -82,12 +82,17 @@ resource "aws_instance" "docker_swarm" {
   key_name      = aws_key_pair.terraform_ec2_key.key_name
   vpc_security_group_ids = [aws_security_group.swarm_sg.id]
   subnet_id     = aws_subnet.public.id
+}
 
+resource "aws_eip" "docker_swarm_eip" {
+    vpc = true
+    instance = aws_instance.docker_swarm[0].id
 }
 
 resource "local_file" "ansible_vars" {
   content = yamlencode({
-    instance_public_ip = aws_instance.docker_swarm[0].public_ip
+    instance_public_ip = aws_eip.docker_swarm_eip.public_ip
+    instance_public_dns = aws_eip.docker_swarm_eip.public_dns
   })
   filename = "${path.module}/../ansible/playbooks/tf_outputs.yml"
 }
