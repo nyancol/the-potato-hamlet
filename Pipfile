@@ -11,9 +11,8 @@ pyjwt = "*"
 passlib = {extras = ["bcrypt"], version = "*"}
 
 [dev-packages]
-eralchemy = "*"
 behave = "*"
-allure-behave = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.10"
