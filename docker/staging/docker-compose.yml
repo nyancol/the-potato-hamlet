@@ -5,7 +5,7 @@ services:
     image: nyancoli/the-potato-hamlet:staging
     build:
       context: ../../
-      dockerfile: ./docker/prod/Dockerfile
+      dockerfile: ./docker/staging/Dockerfile
     ports:
       - "8000:8000"
     environment:
