@@ -48,6 +48,8 @@
     ansible_python_interpreter: "/opt/docker/the_potato_hamlet/virtualenv/bin/python"
   tasks:
     - name: Deploy Docker stack
+      remote_user: ubuntu
+      become: true
       docker_stack:
         name: potato_hamlet
         state: present
