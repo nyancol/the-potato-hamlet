@@ -1,4 +1,4 @@
-from potato_pyserver.models import User, get_user
+from potato_pyserver.models import User, get_user, Household, UserHouseholdAccess
 from potato_pyserver.database import get_db
 from potato_pyserver.dependencies import UserData, get_current_user, SECRET_KEY, ALGORITHM, UserDataResponse, RoleChecker, Role
 
@@ -93,13 +93,20 @@ def user_registration(userForm: UserDataForm, db: Session = Depends(get_db)) -> 
                     hashed_password=hashed_password, first_name=userForm.first_name,
                     last_name=userForm.last_name)
     db.add(new_user)
+
+    household = Household(name=f"Famille de {new_user.first_name}")
+    db.add(household)
     db.commit()
+
     db.refresh(new_user)
+    db.refresh(household)
+    db.add(UserHouseholdAccess(user_id=new_user.id, household_id=household.id))
+    db.commit()
     return new_user
 
 
 @router.delete("/users/{userId}", tags=["Users"])
-def delete_user(userId: int, 
+def delete_user(userId: int,
                 current_user: Annotated[UserDataResponse, Depends(get_current_user)],
                 db: Session = Depends(get_db)):
     if current_user.id != userId:

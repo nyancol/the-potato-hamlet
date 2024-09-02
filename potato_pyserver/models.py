@@ -23,7 +23,7 @@ class Hamlet(Base):
     items: Mapped[List["WorldItem"]] = relationship(back_populates="hamlet",
                                                     cascade="all, delete-orphan")
 
-    access_requests: Mapped[List["HamletAccessRequest"]] = relationship(back_populates="hamlet")
+    hamlet_access_requests: Mapped[List["HamletAccessRequest"]] = relationship(back_populates="hamlet")
 
 
 class User(Base):
@@ -37,12 +37,12 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(30))
     last_name: Mapped[str] = mapped_column(String(30))
 
-    household_id: Mapped[Optional[int]] = mapped_column(ForeignKey("households.id"))
-    household: Mapped["Household"] = relationship(back_populates="users")
-
     role: Mapped[Role] = mapped_column(server_default="USER")
 
-    access_requests: Mapped[List["HamletAccessRequest"]] = relationship(back_populates="user")
+    hamlet_access_requests: Mapped[List["HamletAccessRequest"]] = relationship(back_populates="user")
+
+    household_access_requests: Mapped[List["HouseholdAccessRequest"]] = relationship(back_populates="user")
+    user_household_access: Mapped["UserHouseholdAccess"] = relationship(back_populates="user")
 
 
 def get_user(db: Session, username: str):
@@ -64,10 +64,10 @@ class HamletAccessRequest(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    user: Mapped[User] = relationship(back_populates="access_requests")
+    user: Mapped[User] = relationship(back_populates="hamlet_access_requests")
 
     hamlet_id: Mapped[int] = mapped_column(ForeignKey("hamlets.id"))
-    hamlet: Mapped[Hamlet] = relationship(back_populates="access_requests")
+    hamlet: Mapped[Hamlet] = relationship(back_populates="hamlet_access_requests")
 
     status: Mapped[str] = mapped_column(String(30))
     content: Mapped[str] = mapped_column(String(500))
@@ -79,9 +79,41 @@ class Household(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(30))
 
-    users: Mapped[List["User"]] = relationship(back_populates="household")
+    user_household_accesses: Mapped[List["UserHouseholdAccess"]] = relationship(back_populates="household")
 
     houses: Mapped[List["House"]] =  relationship(back_populates="household")
+
+    household_access_requests: Mapped[List["HouseholdAccessRequest"]] = relationship(back_populates="household")
+
+
+class UserHouseholdAccess(Base):
+    __tablename__ = "user_household_accesses"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped[User] = relationship(back_populates="user_household_access")
+
+    household_id: Mapped[int] = mapped_column(ForeignKey("households.id"))
+    household: Mapped[Household] = relationship(back_populates="user_household_accesses")
+
+    request_id: Mapped[int] = mapped_column(ForeignKey("household_access_requests.id"), nullable=True)
+    request: Mapped["HouseholdAccessRequest"] = relationship(back_populates="user_household_access")
+
+
+class HouseholdAccessRequest(Base):
+    __tablename__ = "household_access_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    household_id: Mapped[int] = mapped_column(ForeignKey("households.id"))
+    household: Mapped[Household] = relationship(back_populates="household_access_requests")
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped[User] = relationship(back_populates="household_access_requests")
+
+    status: Mapped[str] = mapped_column(String(30))
+    content: Mapped[str] = mapped_column(String(500))
+
+    user_household_access: Mapped[UserHouseholdAccess] = relationship(back_populates="request")
 
 
 class Character(Base):
