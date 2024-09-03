@@ -8,6 +8,6 @@ RUN pip install --no-cache-dir -r /requirements.txt
 
 COPY ./potato_pyserver ./potato_pyserver
 
-EXPOSE 8000
+EXPOSE 443
 
-CMD ["fastapi", "run", "./potato_pyserver/main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "potato_pyserver.main:app", "--host", "0.0.0.0", "--port", "443", "--ssl-keyfile", "/run/secrets/keyfile", "--ssl-certfile", "/run/secrets/certfile"]

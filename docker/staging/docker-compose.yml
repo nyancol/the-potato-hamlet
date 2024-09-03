@@ -7,11 +7,14 @@ services:
       context: ../../
       dockerfile: ./docker/staging/Dockerfile
     ports:
-      - "8000:8000"
+      - "443:443"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DEBUG: ${DEBUG}
+    secrets:
+      - certfile
+      - keyfile
   db:
     image: postgres
     env_file: ".env"
@@ -25,3 +28,9 @@ services:
     restart: always
     ports:
       - "8080:8080"
+
+secrets:
+  certfile:
+    file: /etc/letsencrypt/live/koratata.com/fullchain.pem
+  keyfile:
+    file: /etc/letsencrypt/live/koratata.com/privkey.pem

@@ -1,0 +1,41 @@
+---
+- name: Reset CloudFlare DNS and regenerate a Let's Encrypt certificate
+  hosts: docker_swarm
+  become: yes
+  tasks:
+    - name: Update apt repository
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - python3
+          - python3-venv
+          - libaugeas0
+        state: present
+
+    - name: Create a Python virtual environment for Certbot
+      command: python3 -m venv /opt/certbot/
+      args:
+        creates: /opt/certbot/
+
+    - name: Upgrade pip in the virtual environment
+      command: /opt/certbot/bin/pip install --upgrade pip
+
+    - name: Install Certbot in the virtual environment
+      command: /opt/certbot/bin/pip install certbot
+
+    - name: Create a symbolic link for Certbot
+      command: ln -s /opt/certbot/bin/certbot /usr/bin/certbot
+      args:
+        removes: /usr/bin/certbot  # Only create link if it doesn't exist
+
+    - name: Obtain SSL certificate using Certbot
+      command: >
+        /opt/certbot/bin/certbot certonly --standalone --non-interactive
+        --agree-tos --email yanncolina@gmail.com -d koratata.com
+      args:
+        creates:
+          - /etc/letsencrypt/live/koratata.com/fullchain.pem
+          - /etc/letsencrypt/live/koratata.com/privkey.pem
