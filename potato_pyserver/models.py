@@ -1,12 +1,13 @@
 from potato_pyserver.database import Base
 
+import dataclasses
 from typing import List, Optional
 import enum
 
 from pydantic import BaseModel
 
 from sqlalchemy import String, ForeignKey, create_engine, Table, Integer, Column
-from sqlalchemy.orm import Mapped, mapped_column, relationship, Session
+from sqlalchemy.orm import Mapped, mapped_column, relationship, Session, composite
 
 
 class Role(enum.Enum):
@@ -145,16 +146,53 @@ class WorldItemType(Base):
     items: Mapped["WorldItem"] = relationship(back_populates="item_type")
 
 
+@dataclasses.dataclass
+class Position:
+    x: float
+    y: float
+    z: float
+
+
 class WorldItem(Base):
     __tablename__ = "world_items"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(30))
+
+    position: Mapped[Position] = composite(mapped_column("x"),
+                                           mapped_column("y"),
+                                           mapped_column("z"))
+
+    prefab_id: Mapped[int] = mapped_column(ForeignKey("prefabs.id"))
+    prefab: Mapped["Prefab"] = relationship(back_populates="world_items")
 
     item_type_id: Mapped[int] = mapped_column(ForeignKey("world_item_types.id"))
     item_type: Mapped["WorldItemType"] = relationship(back_populates="items")
 
     hamlet_id: Mapped[int] = mapped_column(ForeignKey("hamlets.id"))
     hamlet: Mapped["Hamlet"] = relationship(back_populates="items")
+
+
+class Prefab(Base):
+    __tablename__ = "prefabs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(30))
+    path: Mapped[str] = mapped_column(String(30))
+
+    model_id: Mapped[Optional[int]] = mapped_column(ForeignKey("three_d_models.id"))
+    model: Mapped[Optional["ThreeDModel"]] = relationship(back_populates="prefabs")
+
+    world_items: Mapped[List[WorldItem]] = relationship(back_populates="prefab")
+
+
+class ThreeDModel(Base):
+    __tablename__ = "three_d_models"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(30))
+
+    prefabs: Mapped[List[Prefab]] = relationship(back_populates="model")
 
 
 class StreetFurniture(Base):
@@ -199,6 +237,7 @@ class Message(Base):
 def populate_world_item_types(engine):
     session = Session(engine)
     session.add(WorldItemType(name="house"))
+    session.add(Prefab(path="ConstructionSite", name="ConstructionSite"))
     session.commit()
 
 
