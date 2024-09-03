@@ -53,6 +53,20 @@ resource "aws_security_group" "swarm_sg" {
   }
 
   ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
     from_port   = 8000
     to_port     = 8000
     protocol    = "tcp"
@@ -87,6 +101,29 @@ resource "aws_instance" "docker_swarm" {
 resource "aws_eip" "docker_swarm_eip" {
     vpc = true
     instance = aws_instance.docker_swarm[0].id
+}
+
+
+data "cloudflare_zone" "koratata_zone" {
+  name = "koratata.com"
+}
+
+resource "cloudflare_record" "koratata_www_record" {
+  zone_id = data.cloudflare_zone.koratata_zone.id
+  name     = "www"
+  value    = aws_eip.docker_swarm_eip.public_ip
+  type     = "A"
+  ttl      = 1
+  proxied  = true
+}
+
+resource "cloudflare_record" "koratata_root_record" {
+  zone_id = data.cloudflare_zone.koratata_zone.id
+  name     = "@"
+  value    = aws_eip.docker_swarm_eip.public_ip
+  type     = "A"
+  ttl      = 1
+  proxied  = true
 }
 
 resource "local_file" "ansible_vars" {
