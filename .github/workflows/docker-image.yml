@@ -33,3 +33,11 @@ jobs:
           file: ./docker/staging/Dockerfile
           push: true
           tags: nyancoli/the-potato-hamlet:staging
+      -
+        name: Deploy to Docker Swarm
+        uses: sagebind/docker-swarm-deploy-action@v2
+        with:
+          remote_host: ssh://ubuntu@koratata.com
+          ssh_private_key: ${{ secrets.SWARM_SSH_PRIVATE_KEY }}
+          ssh_public_key: ${{ secrets.SWARM_SSH_PUBLIC_KEY }}
+          args: stack deploy --compose-file /opt/docker/the_potato_hamlet/docker-compose-full.yml potato_hamlet
