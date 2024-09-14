@@ -86,3 +86,11 @@ def test_fetch_house(client_authenticated, household, house, db):
     assert isinstance(res.json()["item"]["position"]["x"], float)
     assert isinstance(res.json()["item"]["position"]["y"], float)
     assert isinstance(res.json()["item"]["position"]["z"], float)
+
+
+def test_update_house_position(client_authenticated, household, house, db):
+    res = client_authenticated.put(f"/worldItems/1/houses/{house['id']}/position", json={"x": 100.0, "y": 100.0, "z": 100.0})
+    assert res.status_code == 200
+    assert res.json()["x"] == 100
+    assert res.json()["y"] == 100
+    assert res.json()["z"] == 100

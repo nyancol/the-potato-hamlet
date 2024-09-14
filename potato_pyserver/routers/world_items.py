@@ -39,6 +39,10 @@ class HouseData(BaseModel):
     household_id: int
 
 
+class PrefabData(BaseModel):
+    id: int
+
+
 def generate_new_house(db, hamlet_id, household_id, house_name):
     """Returns a house item in a new free location"""
     # This implementation generates randomly house locations in an array of 5 x 5
@@ -120,6 +124,38 @@ def create_house(hamletId: int, house: HouseRequestData,
             "household_id": new_house.household_id,
             "item": {"id": new_house.item.id, "hamlet_id": new_house.item.hamlet_id,
                      "position": new_house.item.position}}
+
+
+@router.put("/worldItems/{hamletId}/houses/{houseId}/position", response_model=PositionData,
+        tags=["World Items"])
+def update_house_position(hamletId: int, houseId: int, position: PositionData,
+        current_user: Annotated[UserDataResponse, Depends(get_current_user)],
+        db: Session = Depends(get_db)):
+    house = db.query(House).filter(House.id == houseId).first()
+    if house is None:
+        raise HTTPException(status_code=404, detail=f"House '{houseId}' not found")
+
+    db.query(WorldItem).filter(WorldItem.id == house.item_id) \
+                       .update({"position": Position(position.x, position.y, position.z)})
+    db.commit()
+    db.refresh(house)
+    return house.item.position
+
+
+@router.put("/worldItems/{hamletId}/houses/{houseId}/prefab", response_model=PositionData,
+        tags=["World Items"])
+def update_house_prefab(hamletId: int, houseId: int, prefab: PrefabData,
+        current_user: Annotated[UserDataResponse, Depends(get_current_user)],
+        db: Session = Depends(get_db)):
+    house = db.query(House).filter(House.id == houseId).first()
+    if house is None:
+        raise HTTPException(status_code=404, detail=f"House '{houseId}' not found")
+
+    db.query(WorldItem).filter(WorldItem.id == house.item_id) \
+                       .update({"position": Position(position.x, position.y, position.z)})
+    db.commit()
+    db.refresh(house)
+    return house.item.position
 
 
 @router.delete("/worldItems/{hamletId}/houses/{houseId}", tags=["World Items"])
