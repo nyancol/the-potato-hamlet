@@ -117,6 +117,11 @@ class HouseholdAccessRequestData(BaseModel):
     content: str
 
 
+class HouseholdAccessRequestStatus(BaseModel):
+    status: str
+    content: str
+
+
 @router.post("/households/{householdId}/accessRequests",
              response_model=HouseholdAccessRequestData, tags=["Households"])
 def create_household_access_request(householdId: int,
@@ -159,11 +164,10 @@ def fetch_household_access_request(householdId: int, requestId: int,
     return access_request
 
 
-@router.put("/households/{householdId}/accessRequests/{requestId}",
+@router.put("/households/{householdId}/accessRequests/{requestId}/status",
             response_model=HouseholdAccessRequestData, tags=["Households"])
-def approve_household_access_request(householdId: int,
-            requestId: int,
-            status_update: HouseholdAccessRequestData,
+def update_status_household_access_request(householdId: int,
+            requestId: int, new_status: HouseholdAccessRequestStatus,
             current_user: Annotated[UserDataResponse, Depends(get_current_user)],
             db: Session = Depends(get_db)):
 
@@ -174,11 +178,11 @@ def approve_household_access_request(householdId: int,
 
     db.query(HouseholdAccessRequest) \
       .filter(HouseholdAccessRequest.id == requestId) \
-      .update({"status": status_update.status})
+      .update({"status": new_status.status})
 
-    if status_update.status == "Approved":
+    if new_status.status == "Approved":
         db.query(UserHouseholdAccess) \
-          .filter(UserHouseholdAccess.user_id == status_update.user_id) \
+          .filter(UserHouseholdAccess.user_id == current_user.id) \
           .update({"household_id": householdId, "request_id": requestId})
 
     db.commit()

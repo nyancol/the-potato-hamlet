@@ -121,10 +121,8 @@ def test_get_household_access_request(client_authenticated, access_request):
 def test_approve_household_access_request(client_authenticated, access_request, db):
     r_id = access_request["id"]
     req = client_authenticated.put(
-            f"/households/{access_request['household_id']}/accessRequests/{r_id}",
-            json={"id": r_id, "household_id": access_request["household_id"],
-                  "user_id": access_request["user_id"], "status": "Approved",
-                  "content": "asdf"})
+            f"/households/{access_request['household_id']}/accessRequests/{r_id}/status",
+            json={"status": "Approved", "content": "asdf"})
 
     assert req.status_code == 200
 
@@ -138,19 +136,11 @@ def test_approve_household_access_request(client_authenticated, access_request, 
 def test_reject_household_access_request(client_authenticated, access_request, db):
     r_id = access_request["id"]
     req = client_authenticated.put(
-            f"/households/{access_request['household_id']}/accessRequests/{r_id}",
-            json={"id": r_id, "household_id": access_request["household_id"],
-                  "user_id": access_request["user_id"], "status": "Rejected",
-                  "content": "asdf"})
+            f"/households/{access_request['household_id']}/accessRequests/{r_id}/status",
+            json={"status": "Rejected", "content": "asdf"})
 
     assert req.status_code == 200
 
     user = db.query(User).filter(User.id == access_request["user_id"]).first()
     assert req.json()["status"] == "Rejected"
 
-# def test_users_in_household(client_authenticated)
-
-# def test_get_my_household(client_authenticated, household, user):
-#     res = client_authenticated.get(f"/households/{household['id']}/me",
-#                                     json=access_request)
-#     assert res.status_code == 200
